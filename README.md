@@ -1489,92 +1489,147 @@ PUT tweets/_mapping
 }
 ```
 
-## Add the pipeline
+## Add the twitter pipeline
 ```
 PUT _ingest/pipeline/twatter-ingest
 {
-  "description": "A pipeline demonstrating multiple NLP pytorch based processors",
-  "processors" : [
-      {
-        "remove" : {
-          "field" : [
-            "contributors_enabled",
-            "default_profile",
-            "default_profile_image",
-            "favourites_count",
-            "friends_count",
-            "geo_enabled",
-            "id",
-            "id_str",
-            "is_translator",
-            "listed_count",
-            "location",
-            "profile_background_color",
-            "profile_background_image_url",
-            "profile_background_image_url_https",
-            "profile_background_tile",
-            "profile_banner_url",
-            "profile_image_url",
-            "profile_image_url_https",
-            "profile_link_color",
-            "profile_sidebar_border_color",
-            "profile_sidebar_fill_color",
-            "profile_text_color",
-            "profile_use_background_image",
-            "protected",
-            "translator_type",
-            "verified"
-          ]
+  "processors": [
+    {
+      "remove": {
+        "field": [
+          "contributors_enabled",
+          "default_profile",
+          "default_profile_image",
+          "favourites_count",
+          "friends_count",
+          "geo_enabled",
+          "id",
+          "id_str",
+          "is_translator",
+          "listed_count",
+          "location",
+          "profile_background_color",
+          "profile_background_image_url",
+          "profile_background_image_url_https",
+          "profile_background_tile",
+          "profile_banner_url",
+          "profile_image_url",
+          "profile_image_url_https",
+          "profile_link_color",
+          "profile_sidebar_border_color",
+          "profile_sidebar_fill_color",
+          "profile_text_color",
+          "profile_use_background_image",
+          "protected",
+          "translator_type",
+          "verified"
+        ]
+      }
+    },
+    {
+      "set": {
+        "field": "text_field",
+        "copy_from": "description"
+      }
+    },
+    {
+      "inference": {
+        "model_id": "elastic__distilbert-base-cased-finetuned-conll03-english",
+        "target_field": "moogle_ner",
+        "field_map": {
+          "description": "text"
         }
-      },
-      {
-        "set" : {
-          "field" : "text_field",
-          "copy_from" : "description"
-        }
-      },
-      {
-        "inference" : {
-          "model_id" : "elastic__distilbert-base-cased-finetuned-conll03-english",
-          "target_field" : "moogle_ner",
-          "field_map" : {
-            "description" : "text"
-          }
-        }
-      },
-      {
-        "inference" : {
-          "model_id" : "typeform__distilbert-base-uncased-mnli",
-          "target_field" : "moogle_zshots",
-          "field_map" : {
-            "description" : "text"
-          },
-          "inference_config" : {
-            "zero_shot_classification" : {
-              "labels" : [
-                "plan",
-                "event",
-                "crime",
-                "weapon",
-                "travel ",
-                "anger",
-                "violence",
-                "hide"
-              ]
-            }
-          }
-        }
-      },
-      {
-        "inference" : {
-          "model_id" : "bhadresh-savani__bert-base-uncased-emotion",
-          "target_field" : "moogle_emotions",
-          "field_map" : {
-            "description" : "text"
+      }
+    },
+    {
+      "inference": {
+        "model_id": "typeform__distilbert-base-uncased-mnli",
+        "target_field": "moogle_zshots",
+        "field_map": {
+          "description": "text"
+        },
+        "inference_config": {
+          "zero_shot_classification": {
+            "labels": [
+              "plan",
+              "event",
+              "crime",
+              "weapon",
+              "travel ",
+              "anger",
+              "violence",
+              "hide"
+            ]
           }
         }
       }
-    ]
+    },
+    {
+      "inference": {
+        "model_id": "bhadresh-savani__bert-base-uncased-emotion",
+        "target_field": "moogle_emotions",
+        "field_map": {
+          "description": "text"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Add the shakespheare pipeline
+```
+PUT _ingest/pipeline/shakespeare-ingest
+{
+  "processors": [
+    {
+      "set": {
+        "field": "text_field",
+        "copy_from": "text_entry"
+      }
+    },
+    {
+      "inference": {
+        "model_id": "elastic__distilbert-base-cased-finetuned-conll03-english",
+        "target_field": "moogle_ner",
+        "field_map": {
+          "description": "text"
+        }
+      }
+    },
+    {
+      "inference": {
+        "model_id": "typeform__distilbert-base-uncased-mnli",
+        "target_field": "moogle_zshots",
+        "field_map": {
+          "description": "text"
+        },
+        "inference_config": {
+          "zero_shot_classification": {
+            "labels": [
+              "plan",
+              "crime",
+              "weapon",
+              "travel ",
+              "violence",
+              "dishonest",
+              "escape",
+              "kill"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "inference": {
+        "model_id": "bhadresh-savani__bert-base-uncased-emotion",
+        "target_field": "moogle_emotions",
+        "field_map": {
+          "description": "text"
+        }
+      }
+    }
+  ]
 }
 ```
 
