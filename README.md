@@ -1,25 +1,32 @@
 
-# To start the cluster
-'''
-docker-compose up -d
-'''
-
-# To import pytorch models into our cluster:
-'''
+# Create the eland image, which will be used to import NLP modles into elastic
+```
 git clone https://github.com/elastic/eland.git
 cd eland/
 docker build -t elastic/eland .
-docker run -it --rm --network host elastic/eland
+```
+
+# Start up the elasticsearch cluster. This also includes kibana and our newly built eland server:
+```
+sudo sysctl -w vm.max_map_count=262144
+docker-compose up -d
+```
+
+# To import pytorch models into our cluster:
+```
+docker exec -it 70aef7b4485839635bf77b81c77f7dfbf678bcae42a429a2e834b3e7c928500f bash
 
 eland_import_hub_model --url http://es01:9200 --hub-model-id elastic/distilbert-base-cased-finetuned-conll03-english --task-type ner
 eland_import_hub_model --url http://es01:9200 --hub-model-id typeform/distilbert-base-uncased-mnli --task-type zero_shot_classification
 eland_import_hub_model --url http://es01:9200 --hub-model-id bhadresh-savani/bert-base-uncased-emotion --task-type text_classification
-'''
 
-Then start all of the models via kibana's machine learning portal
+exit
+```
+
+- Then start all of the models via kibana's machine learning portal (http://localhost:5601)
 
 # TO add a pipeline that makes use of our models:
-'''
+```
 PUT _ingest/pipeline/nlp-inferred-enrichments-pipeline
 {
   "description": "A pipeline demonstrating multiple NLP pytorch based processors",
@@ -66,21 +73,21 @@ PUT _ingest/pipeline/nlp-inferred-enrichments-pipeline
     }
   ]
 }- 
-'''
+```
 
 
 # Prepare our index and it's ingest pipeline
 
 ## Create the index
-'''
+```
 PUT tweets
 {}
 
 DELETE tweets/_mapping
-'''
+```
 
 ## Add the mapping
-'''
+```
 PUT tweets/_mapping
 {
   "properties": {
@@ -1480,9 +1487,10 @@ PUT tweets/_mapping
     }
   }
 }
-'''
+```
 
 ## Add the pipeline
+```
 PUT _ingest/pipeline/twatter-ingest
 {
   "description": "A pipeline demonstrating multiple NLP pytorch based processors",
@@ -1568,7 +1576,7 @@ PUT _ingest/pipeline/twatter-ingest
       }
     ]
 }
-'''
+```
 
 # Download the data sets from the below sources, and shrink it to your desired size
 Tweets:
@@ -1578,10 +1586,12 @@ Shakespeare plays:
 https://download.elastic.co/demos/kibana/gettingstarted/shakespeare_6.0.json
 
 
-# To ingest twitter data, run the following command: 
+# Ingest twitter data, run the following command:
+```
 cat Tweets2k.json | jq -c '.[] | {"index": {"_index": "tweets"}}, .' | curl -XPOST localhost:9200/_bulk?pipeline=twatter-ingest --data-binary @- -H'Content-Type: application/json'
-
+```
 # To set up the shakespeare index and mappings:
+```
 PUT shakespeare
 {}
 
@@ -1594,6 +1604,11 @@ PUT shakespeare/_mapping
     "speech_number": {"type": "integer"}
  }
 }
+```
 
 # To load in the shakespheare data:
+```
 curl -H 'Content-Type: application/x-ndjson' -XPOST 'localhost:9200/shakespeare/_bulk?pipeline=shakespeare-ingest' --data-binary @shakespeare_6.0.json
+```
+# Voilà...
+You you can now interrogate the enriched data in kibana. Please feel free to import my included dashboards as a starting point. They are included via the export.ndjson file.
