@@ -25,65 +25,12 @@ exit
 
 - Then start all of the models via kibana's machine learning portal (http://localhost:5601)
 
-# TO add a pipeline that makes use of our models:
-```
-PUT _ingest/pipeline/nlp-inferred-enrichments-pipeline
-{
-  "description": "A pipeline demonstrating multiple NLP pytorch based processors",
-  "processors": [
-    {
-      "inference": {
-        "model_id": "elastic__distilbert-base-cased-finetuned-conll03-english",
-        "target_field": "ner",
-        "field_map": {
-          "message": "text"
-        },
-        "tag": "ner"
-      }
-    },
-    {
-      "set": {
-        "field": "event.ingested",
-        "value": "{{{_ingest.timestamp}}}"
-      }
-    },
-    {
-      "inference": {
-        "model_id": "typeform__distilbert-base-uncased-mnli",
-        "target_field": "mlni",
-        "field_map": {
-          "message": "text"
-        },
-        "inference_config": {
-          "zero_shot_classification": {
-            "labels": [
-              "plan",
-              "event",
-              "crime",
-              "weapon",
-              "travel ",
-              "anger",
-              "violence",
-              "hide"
-            ]
-          }
-        },
-        "tag": "mlni"
-      }
-    }
-  ]
-}- 
-```
-
-
-# Prepare our index and it's ingest pipeline
+# Prepare our indexes and it's ingest pipeline
 
 ## Create the index
 ```
 PUT tweets
 {}
-
-DELETE tweets/_mapping
 ```
 
 ## Add the mapping
